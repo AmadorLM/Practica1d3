@@ -1,7 +1,8 @@
-# Pinning locations + scale
+# Covid cases + pinning locations
 
-Our boss liked a lot the map we have developed, now he wants to focus on Spain affection by City, he wants to
-display a map pinning affected locations and scaling that pin according the number of cases affected, something like:
+In this work has been plotted the map of Spain with the Covid cases per autonomous community, two options can be selected: - Covid cases in April 2021
+- Covid cases in April 2022
+We can see how much is the difference between the two dates and how some autonomous communities has been develop the Covid cases.
 
 ![map affected coronavirus](./content/chart.png "affected coronavirus")
 
@@ -10,13 +11,12 @@ codesandbox: https://codesandbox.io/s/hopeful-ellis-rlczx
 We have to face three challenges here:
 
 - Place pins on a map based on location.
-- Scale pin radius based on affected number.
-- Spain got canary island that is a territory placed far away, we need to cropt that islands and paste them in a visible
-  place in the map.
+- Scale pin radius based on affected number of covid cases.
+- Spain got canary island that is a territory placed far away, we need to cropt that islands and paste them in a visible place in the map.
 
 # Steps
 
-- We will take as starting example _00-render-map-hover_, let's copy the content from that folder and execute _npm install_.
+- We will take as starting example _00-render-map-hover_ and _02-pin-location-scale_, let's copy the content from that folder and execute _npm install_.
 
 ```bash
 npm install
@@ -26,7 +26,7 @@ npm install
 
 Let's copy it under the following route _./src/spain.json_
 
-- Now instead of importing _europe.json_ we will import _spain.json_.
+- Now instead of importing _europe.json_ we will import _spain.json_, _covid_04_2021_, _covid_04_2022_, _ResultEntry_
 
 _./src/index.ts_
 
@@ -35,23 +35,22 @@ import * as d3 from "d3";
 import * as topojson from "topojson-client";
 - const europejson = require("./europe.json");
 + const spainjson = require("./spain.json");
++ import { latLongCommunities } from "./communities";
++ // Covid data per community, cases accumulated until 19-04-2022
++ import { covid_04_2022 } from "./data/covid_stats";
++ // Covid data per community, cases accumulated until 19-04-2021
++ import { covid_04_2021 } from "./data/covid_stats";
++ // Import resultentry, type of data
++ import { ResultEntry } from "./data/covid_stats";
 ```
 
-- Let's build the spain map instead of europe:
+- Let's build the spainjson:
 
 _./src/index.ts_
 
 ```diff
-const geojson = topojson.feature(
-+  spainjson,
--  europejson,
-+  spainjson.objects.ESP_adm1
--  europejson.objects.continent_Europe_subunits
-);
++ const spainjson = require("./spain.json");
 ```
-
-> How do we know that we have to use _spainjson.objects.ESP_adm1_ just by examining
-> the _spain.json_ file and by debugging and inspecting what's inside _spainjson_ object?
 
 - If we run the project, we will get some bitter-sweet feelings, we can see a map of spain,
   but it's too smal, and on the other hand, canary islands are shown far away (that's normal,
@@ -77,9 +76,6 @@ npm install d3-composite-projections --save
 - Let's import it in our _index.ts_ (we will use require since we don't have typings).
 
 ```diff
-import * as d3 from "d3";
-import * as topojson from "topojson-client";
-const spainjson = require("./spain.json");
 + const d3Composite = require("d3-composite-projections");
 ```
 
@@ -95,6 +91,15 @@ const aProjection =
 +  d3Composite
 +  .geoConicConformalSpain()
 ```
+
+- Let's define the geoPath of the projection:
+```diff
+const aProjection =
++   d3
++  .geoPath()
++  .projection(aProjection);
+```
+POR AQUIII ME HE QUDAAOOOOOOAOSD
 
 - If we run the project, voila ! we got the map just the way we want it.
 

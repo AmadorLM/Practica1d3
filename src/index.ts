@@ -1,29 +1,16 @@
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
-const spainjson = require("./spain.json");
-const d3Composite = require("d3-composite-projections");
-import { stats } from "./stats";
 import { latLongCommunities } from "./communities";
 // Covid data per community, cases accumulated until 19-04-2022
-import { covid_04_2022 } from "./data/covid_04_2021";
+import { covid_04_2022 } from "./data/covid_stats";
 // Covid data per community, cases accumulated until 19-04-2021
-import { covid_04_2021 } from "./data/covid_04_2021";
+import { covid_04_2021 } from "./data/covid_stats";
 // Import resultentry, type of data
-import { ResultEntry } from "./data/covid_04_2021";
+import { ResultEntry } from "./data/covid_stats";
+const spainjson = require("./spain.json");
+const d3Composite = require("d3-composite-projections");
 
-// set the affected color scale
-// const color = d3
-//   .scaleThreshold<number, string>()
-//   .domain([0, 1, 100, 500, 700, 5000])
-//   .range([
-//     "#FFFFF",
-//     "#FFE8E5",
-//     "#F88F70",
-//     "#CD6A4E",
-//     "#A4472D",
-//     "#7B240E",
-//     "#540000",
-//   ]);
+
 
 // Calculating the maximum value
 // I take the maximum value of covid in april 2022 to see the transition
@@ -37,11 +24,14 @@ const maxCovid_04_2022 = covid_04_2022.reduce(
 const affectedRadiusScale = d3
   .scaleLinear()
   .domain([0, maxCovid_04_2022])
-  .range([0, 70]); // 70 pixel max radius, we could calculate it relative to width and height
+  .range([0, 65]); // 65 pixel max radius, we could calculate it relative to width and height
+
+// Define the first data to show
+let currentCovidStat = covid_04_2021;
 
 // Calculate the radius of each community depending on the number of cases
 const calculateRadiusBasedOnAffectedCases = (comunidad: string) => {
-  const entry = covid_04_2021.find((item) => item.name === comunidad);
+  const entry = currentCovidStat.find((item) => item.name === comunidad);
 
   return entry ? affectedRadiusScale(entry.value) : 0;
 };
@@ -77,24 +67,38 @@ svg
   // https://stackoverflow.com/questions/35892627/d3-map-d-attribute
   .attr("d", geoPath as any);
 
-// svg
-//   .selectAll("circle")
-//   .data(latLongCommunities)
-//   .enter()
-//   .append("circle")
-//   .attr("class", "affected-marker")
-//   .attr("r", (d) => calculateRadiusBasedOnAffectedCases(d.name))
-//   .attr("cx", (d) => aProjection([d.long, d.lat])[0])
-//   .attr("cy", (d) => aProjection([d.long, d.lat])[1]);
+// Painting the circles
+svg
+  .selectAll("circle")
+  .data(latLongCommunities)
+  .enter()
+  .append("circle")
+  .attr("class", "affected-marker")
+  .attr("r", (d) => calculateRadiusBasedOnAffectedCases(d.name))
+  .attr("cx", (d) => aProjection([d.long, d.lat])[0])
+  .attr("cy", (d) => aProjection([d.long, d.lat])[1])
+  // When I shift the mouse over the element will move itself
+  // Using the function catch the html element associated
+  .on("mouseover", function() {
+    d3
+      .select(this)
+      .attr("transform", `scale(1.05, 1.05)`);
+  })
+  .on("mouseout", function() {
+    d3
+      .select(this)
+      .attr("transform", ``);
+  })
+;
 
 // Defining the chart that is going to change the covid cases
 const updateChart = (data: ResultEntry[]) => {
+  currentCovidStat = data;
   // Selecciono el path y actualizo los datos
   svg  
     .selectAll("circle")
     .data(latLongCommunities)
-    .enter()
-    .append("circle")
+    // as we have paint the circles before we don't need to append them
     .attr("class", "affected-marker")
     .attr("r", (d) => calculateRadiusBasedOnAffectedCases(d.name))
     .attr("cx", (d) => aProjection([d.long, d.lat])[0])

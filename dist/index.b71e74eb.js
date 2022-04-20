@@ -523,26 +523,13 @@ var _d3 = require("d3");
 var _topojsonClient = require("topojson-client");
 var _communities = require("./communities");
 // Covid data per community, cases accumulated until 19-04-2022
-var _covid042021 = require("./data/covid_04_2021");
+var _covidStats = require("./data/covid_stats");
 const spainjson = require("./spain.json");
 const d3Composite = require("d3-composite-projections");
-// set the affected color scale
-// const color = d3
-//   .scaleThreshold<number, string>()
-//   .domain([0, 1, 100, 500, 700, 5000])
-//   .range([
-//     "#FFFFF",
-//     "#FFE8E5",
-//     "#F88F70",
-//     "#CD6A4E",
-//     "#A4472D",
-//     "#7B240E",
-//     "#540000",
-//   ]);
 // Calculating the maximum value
 // I take the maximum value of covid in april 2022 to see the transition
 // from 2021-2022
-const maxCovid_04_2022 = _covid042021.covid_04_2022.reduce((max, item)=>item.value > max ? item.value : max
+const maxCovid_04_2022 = _covidStats.covid_04_2022.reduce((max, item)=>item.value > max ? item.value : max
 , 0);
 // Fixing the scale of the radius for the circle of the number of cases 
 const affectedRadiusScale = _d3.scaleLinear().domain([
@@ -550,11 +537,13 @@ const affectedRadiusScale = _d3.scaleLinear().domain([
     maxCovid_04_2022
 ]).range([
     0,
-    70
-]); // 70 pixel max radius, we could calculate it relative to width and height
+    65
+]); // 65 pixel max radius, we could calculate it relative to width and height
+// Define the first data to show
+let currentCovidStat = _covidStats.covid_04_2021;
 // Calculate the radius of each community depending on the number of cases
 const calculateRadiusBasedOnAffectedCases = (comunidad)=>{
-    const entry = _covid042021.covid_04_2021.find((item)=>item.name === comunidad
+    const entry = currentCovidStat.find((item)=>item.name === comunidad
     );
     return entry ? affectedRadiusScale(entry.value) : 0;
 };
@@ -575,19 +564,29 @@ const svg = _d3.select("body").append("svg").attr("width", 1024).attr("height", 
 svg.selectAll("path").data(geojson["features"]).enter().append("path").attr("class", "country")// use geoPath to convert the data into the current projection
 // https://stackoverflow.com/questions/35892627/d3-map-d-attribute
 .attr("d", geoPath);
-// svg
-//   .selectAll("circle")
-//   .data(latLongCommunities)
-//   .enter()
-//   .append("circle")
-//   .attr("class", "affected-marker")
-//   .attr("r", (d) => calculateRadiusBasedOnAffectedCases(d.name))
-//   .attr("cx", (d) => aProjection([d.long, d.lat])[0])
-//   .attr("cy", (d) => aProjection([d.long, d.lat])[1]);
+// Painting the circles
+svg.selectAll("circle").data(_communities.latLongCommunities).enter().append("circle").attr("class", "affected-marker").attr("r", (d)=>calculateRadiusBasedOnAffectedCases(d.name)
+).attr("cx", (d)=>aProjection([
+        d.long,
+        d.lat
+    ])[0]
+).attr("cy", (d)=>aProjection([
+        d.long,
+        d.lat
+    ])[1]
+)// When I shift the mouse over the element will move itself
+// Using the function catch the html element associated
+.on("mouseover", function() {
+    _d3.select(this).attr("transform", `scale(1.05, 1.05)`);
+}).on("mouseout", function() {
+    _d3.select(this).attr("transform", ``);
+});
 // Defining the chart that is going to change the covid cases
 const updateChart = (data)=>{
+    currentCovidStat = data;
     // Selecciono el path y actualizo los datos
-    svg.selectAll("circle").data(_communities.latLongCommunities).enter().append("circle").attr("class", "affected-marker").attr("r", (d)=>calculateRadiusBasedOnAffectedCases(d.name)
+    svg.selectAll("circle").data(_communities.latLongCommunities)// as we have paint the circles before we don't need to append them
+    .attr("class", "affected-marker").attr("r", (d)=>calculateRadiusBasedOnAffectedCases(d.name)
     ).attr("cx", (d)=>aProjection([
             d.long,
             d.lat
@@ -600,14 +599,14 @@ const updateChart = (data)=>{
 };
 // Adding the data when click the button of april 2021
 document.getElementById('april_2021').addEventListener('click', ()=>{
-    updateChart(_covid042021.covid_04_2021);
+    updateChart(_covidStats.covid_04_2021);
 });
 // Adding the data when click the button of april 2022
 document.getElementById('april_2022').addEventListener('click', ()=>{
-    updateChart(_covid042021.covid_04_2022);
+    updateChart(_covidStats.covid_04_2022);
 });
 
-},{"d3":"17XFv","topojson-client":"ciUQq","./communities":"b2Noj","./spain.json":"cMNVF","d3-composite-projections":"4XLj6","./data/covid_04_2021":"gtoMv"}],"17XFv":[function(require,module,exports) {
+},{"d3":"17XFv","topojson-client":"ciUQq","./communities":"b2Noj","./spain.json":"cMNVF","d3-composite-projections":"4XLj6","./data/covid_stats":"beTZj"}],"17XFv":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _d3Array = require("d3-array");
@@ -32133,7 +32132,7 @@ exports.default = function() {
     return albersUk.scale(2800);
 };
 
-},{"./math":"e6zZ7","d3-geo":"8r6MJ","./fit":"3PIRf","d3-path":"fDKwR","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gtoMv":[function(require,module,exports) {
+},{"./math":"e6zZ7","d3-geo":"8r6MJ","./fit":"3PIRf","d3-path":"fDKwR","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"beTZj":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "covid_04_2022", ()=>covid_04_2022
