@@ -1,10 +1,14 @@
 # Covid cases + pinning locations
 
-In this work has been plotted the map of Spain with the Covid cases per autonomous community, two options can be selected: - Covid cases in April 2021
-- Covid cases in April 2022
-We can see how much is the difference between the two dates and how some autonomous communities has been develop the Covid cases.
+In this work has been plotted the map of Spain with the Covid cases per autonomous community, two options can be selected: 
+- Covid cases in April 2021
 
-![map affected coronavirus](./content/chart.png "affected coronavirus")
+![map affected coronavirus](./content/covid2021.png "affected coronavirus")
+
+- Covid cases in April 2022
+We can see how much is the difference between the two dates and how some autonomous communities have been developed the Covid cases. 
+
+![map affected coronavirus](./content/covid2022.png "affected coronavirus")
 
 codesandbox: https://codesandbox.io/s/hopeful-ellis-rlczx
 
@@ -35,13 +39,6 @@ import * as d3 from "d3";
 import * as topojson from "topojson-client";
 - const europejson = require("./europe.json");
 + const spainjson = require("./spain.json");
-+ import { latLongCommunities } from "./communities";
-+ // Covid data per community, cases accumulated until 19-04-2022
-+ import { covid_04_2022 } from "./data/covid_stats";
-+ // Covid data per community, cases accumulated until 19-04-2021
-+ import { covid_04_2021 } from "./data/covid_stats";
-+ // Import resultentry, type of data
-+ import { ResultEntry } from "./data/covid_stats";
 ```
 
 - Let's build the spainjson:
@@ -103,7 +100,7 @@ POR AQUIII ME HE QUDAAOOOOOOAOSD
 
 - If we run the project, voila ! we got the map just the way we want it.
 
-- Now we want to display a circle in the middle of each community (comunidad autónoma),
+- Now we want to display a circle in the middle of each community (autonomous community),
   we have collected the latitude and longitude for each community, let's add them to our
   project.
 
@@ -220,9 +217,23 @@ svg
   .data(latLongCommunities)
   .enter()
   .append("circle")
-  .attr("r", 15)
+  .attr("class", "affected-marker")
+  .attr("r", (d) => calculateRadiusBasedOnAffectedCases(d.name))
   .attr("cx", (d) => aProjection([d.long, d.lat])[0])
-  .attr("cy", (d) => aProjection([d.long, d.lat])[1]);
+  .attr("cy", (d) => aProjection([d.long, d.lat])[1])
+  // When I shift the mouse over the element will move itself
+  // Using the function catch the html element associated
+  .on("mouseover", function() {
+    d3
+      .select(this)
+      .attr("transform", `scale(1.05, 1.05)`);
+  })
+  .on("mouseout", function() {
+    d3
+      .select(this)
+      .attr("transform", ``);
+  })
+;
 ```
 
 - Nice ! we got an spot on top of each community, now is time to
@@ -311,7 +322,12 @@ import * as topojson from "topojson-client";
 const spainjson = require("./spain.json");
 const d3Composite = require("d3-composite-projections");
 import { latLongCommunities } from "./communities";
-+ import { stats } from "./stats";
++ // Covid data per community, cases accumulated until 19-04-2022
++ import { covid_04_2022 } from "./data/covid_stats";
++ // Covid data per community, cases accumulated until 19-04-2021
++ import { covid_04_2021 } from "./data/covid_stats";
++ // Import resultentry, type of data
++ import { ResultEntry } from "./data/covid_stats";
 ```
 
 - Let's calculate the maximum number of affected of all communities:
