@@ -6,6 +6,7 @@ In this work has been plotted the map of Spain with the Covid cases per autonomo
 ![map affected coronavirus april 2021](./content/covid2021.PNG "Coronavirus 2021")
 
 - Covid cases in April 2022
+
 We can see how much is the difference between the two dates and how some autonomous communities have been developed the Covid cases. 
 
 ![map affected coronavirus april 2022](./content/covid2022.PNG "Coronavirus 2022")
@@ -110,6 +111,8 @@ const aProjection =
 + .fitSize([1024, 800], geojson);
 ```
 
+This code is already in the version that I used to start this new project.
+
 - Let's define the layout, the size, and background color:
 ```typescript
 // Defining the layout, body, svg, width, height and the background color
@@ -122,7 +125,6 @@ const svg = d3
 ```
 
 - Let's define the geojson:
-
 ```typescript
 // Defining the geojson
 svg
@@ -450,7 +452,7 @@ const calculateRadiusBasedOnAffectedCases = (comunidad: string) => {
 ```
 
 - And let's append at the bottom of the _index_ file a
-  code to render a circle on top of each community. 
+  code to render a circle on top of each community. In this new functionality I've added also when you pass over the circles of the community, the circle will move to know where you are, using the mouseover and mouseout functions. 
 
 _./src/index.ts_
 
@@ -518,9 +520,6 @@ document
   });
   
 ```
-
-- Nice ! we got an spot on top of each community, now is time to
-  make this spot size relative to the number of affected cases per community.
 
 In the file _index.html_ I've added the two buttons to select if we want to see the covid cases in april 2021 or april 2022.
 
