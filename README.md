@@ -3,12 +3,14 @@
 In this work has been plotted the map of Spain with the Covid cases per autonomous community, two options can be selected: 
 - Covid cases in April 2021
 
-![map affected coronavirus april 2021](./content/covid2021.png "Coronavirus 2021")
+![map affected coronavirus april 2021](./content/covid2021.PNG "Coronavirus 2021")
 
 - Covid cases in April 2022
 We can see how much is the difference between the two dates and how some autonomous communities have been developed the Covid cases. 
 
-![map affected coronavirus april 2022](./content/covid2022.png "Coronavirus 2022")
+![map affected coronavirus april 2022](./content/covid2022.PNG "Coronavirus 2022")
+
+![map affected coronavirus ](./content/chart.png "Coronavirus")
 
 codesandbox: https://codesandbox.io/s/hopeful-ellis-rlczx
 
