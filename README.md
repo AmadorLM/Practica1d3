@@ -10,8 +10,6 @@ We can see how much is the difference between the two dates and how some autonom
 
 ![map affected coronavirus april 2022](./content/covid2022.PNG "Coronavirus 2022")
 
-![map affected coronavirus ](./content/chart.png "Coronavirus")
-
 codesandbox: https://codesandbox.io/s/hopeful-ellis-rlczx
 
 We have to face three challenges here:
@@ -28,7 +26,7 @@ We have to face three challenges here:
 npm install
 ```
 
-- This time we will Spain topojson info: https://github.com/deldersveld/topojson/blob/master/countries/spain/spain-comunidad-with-canary-islands.json
+- This time we will see Spain topojson info: https://github.com/deldersveld/topojson/blob/master/countries/spain/spain-comunidad-with-canary-islands.json
 
 Let's copy it under the following route _./src/spain.json_
 
@@ -52,7 +50,7 @@ _./src/index.ts_
 ```
 
 - If we run the project, we will get some bitter-sweet feelings, we can see a map of spain,
-  but it's too smal, and on the other hand, canary islands are shown far away (that's normal,
+  but it's too small, and on the other hand, canary islands are shown far away (that's normal,
   but usually in maps these islands are relocated).
 
 
@@ -98,13 +96,49 @@ const aProjection =
 +  .geoPath()
 +  .projection(aProjection);
 ```
-POR AQUIII ME HE QUDAAOOOOOOAOSD
+
+- Let's define the geojson:
+```diff
++ const geojson = 
++    topojson
++    .feature(spainjson, spainjson.objects.ESP_adm1);
+```
+
+- Let's set the projection size to adjust with geojson:
+```diff
++ aProjection
++ .fitSize([1024, 800], geojson);
+```
+
+- Let's define the layout, the size, and background color:
+```typescript
+// Defining the layout, body, svg, width, height and the background color
+const svg = d3
+  .select("body")
+  .append("svg")
+  .attr("width", 1024)
+  .attr("height", 800)
+  .attr("style", "background-color: #FBFAF0");
+```
+
+- Let's define the geojson:
+
+```typescript
+// Defining the geojson
+svg
+  .selectAll("path")
+  .data(geojson["features"])
+  .enter()
+  .append("path")
+  .attr("class", "country")
+  // use geoPath to convert the data into the current projection
+  // https://stackoverflow.com/questions/35892627/d3-map-d-attribute
+  .attr("d", geoPath as any);
+```
 
 - If we run the project, voila ! we got the map just the way we want it.
 
-- Now we want to display a circle in the middle of each community (autonomous community),
-  we have collected the latitude and longitude for each community, let's add them to our
-  project.
+- Now we want to display a circle in the middle of each community (autonomous community) to represent the number of covid cases in each community, we have collected the latitude and longitude for each community, let's add them to our project.
 
 _./src/communities.ts_
 
@@ -208,12 +242,220 @@ import * as topojson from "topojson-client";
 + import { latLongCommunities } from "./communities";
 ```
 
-- And let's append at the bottom of the _index_ file a
-  code to render a circle on top of each community:
+- We will add the covid cases for april 2021 and april 2022 that we need to display (affected persons per community):
+
+_./stats.ts_
+
+```typescript
+// Covid data until 04-2022
+export const covid_04_2022: ResultEntry[] = [
+{
+    name: "Madrid",
+    value: 1647605,
+},
+{
+    name: "La Rioja",
+    value: 93973,
+},
+{
+    name: "Andalucía",
+    value: 1417273,
+},
+{
+    name: "Cataluña",
+    value: 2377290,
+},
+{
+    name: "Valencia",
+    value: 1368795,
+},
+{
+    name: "Murcia",
+    value: 398468,
+},
+{
+    name: "Extremadura",
+    value: 255370,
+},
+{
+    name: "Castilla La Mancha",
+    value: 492636,
+},
+{
+    name: "País Vasco",
+    value: 677893,
+},
+{
+    name: "Cantabria",
+    value: 131625,
+},
+{
+    name: "Asturias",
+    value: 210439,
+},
+{
+    name: "Galicia",
+    value: 594525,
+},
+{
+    name: "Aragón",
+    value: 410714,
+},
+{
+    name: "Castilla y León",
+    value: 692509,
+},
+{
+    name: "Islas Canarias",
+    value: 341182,
+},
+{
+    name: "Islas Baleares",
+    value: 277195,
+},
+];
+  
+// Covid data until 04-2021
+export const covid_04_2021: ResultEntry[] = [
+    {
+      name: "Madrid",
+      value: 673030,
+    },
+    {
+      name: "La Rioja",
+      value: 29351,
+    },
+    {
+      name: "Andalucía",
+      value: 545483,
+    },
+    {
+      name: "Cataluña",
+      value: 577407,
+    },
+    {
+      name: "Valencia",
+      value: 389876,
+    },
+    {
+      name: "Murcia",
+      value: 110466,
+    },
+    {
+      name: "Extremadura",
+      value: 73621,
+    },
+    {
+      name: "Castilla La Mancha",
+      value: 183854,
+    },
+    {
+      name: "País Vasco",
+      value: 182435,
+    },
+    {
+      name: "Cantabria",
+      value: 28310,
+    },
+    {
+      name: "Asturias",
+      value: 50342,
+    },
+    {
+      name: "Galicia",
+      value: 121177,
+    },
+    {
+      name: "Aragón",
+      value: 116959,
+    },
+    {
+      name: "Castilla y León",
+      value: 221515,
+    },
+    {
+      name: "Islas Canarias",
+      value: 52033,
+    },
+    {
+      name: "Islas Baleares",
+      value: 59016,
+    },
+  ];
+```
+
+- Let's import it into our index.ts
+
+_./src/index.ts_
+
+```diff
+import * as d3 from "d3";
+import * as topojson from "topojson-client";
+const spainjson = require("./spain.json");
+const d3Composite = require("d3-composite-projections");
+import { latLongCommunities } from "./communities";
++ // Covid data per community, cases accumulated until 19-04-2022
++ import { covid_04_2022 } from "./data/covid_stats";
++ // Covid data per community, cases accumulated until 19-04-2021
++ import { covid_04_2021 } from "./data/covid_stats";
++ // Import resultentry, type of data
++ import { ResultEntry } from "./data/covid_stats";
+// Spain json
+const spainjson = require("./spain.json");
+// Projections for canary island
+const d3Composite = require("d3-composite-projections");
+
+```
+
+- Let's calculate the maximum number of cases of all communities, this value I've setted the maximum value of covid cases in april 2022, because as we know the covid cases are the accumulated in all the pandemic:
 
 _./src/index.ts_
 
 ```typescript
+const maxCovid_04_2022 = covid_04_2022.reduce(
+  (max, item) => (item.value > max ? item.value: max),
+  0
+)
+```
+
+- Let's create an scale to map affected to radius size, all the circles will be scaled with this maximum value, so april 2021 as we know that there are less cases there will be smaller circles.
+
+_./src/index.ts_
+
+```typescript
+const affectedRadiusScale = d3
+  .scaleLinear()
+  .domain([0, maxCovid_04_2022])
+  .range([0, 65]); // 65 pixel max radius, we could calculate it relative to width and height
+```
+
+- As we know the functionality let us change from covid data 2021 to covid data 2022, first we decide to show the covid data of April 2021.
+
+```typescript
+// Define the first data to show
+let currentCovidStat = covid_04_2021;
+```
+
+- Let's create a helper function to glue the community name with the affected cases, taking the current covid dat defined.
+
+_./src/index.ts_
+
+```typescript
+// Calculate the radius of each community depending on the number of cases
+const calculateRadiusBasedOnAffectedCases = (comunidad: string) => {
+  const entry = currentCovidStat.find((item) => item.name === comunidad);
+
+  return entry ? affectedRadiusScale(entry.value) : 0;
+};
+```
+
+- And let's append at the bottom of the _index_ file a
+  code to render a circle on top of each community. 
+
+_./src/index.ts_
+
+```typescript
+// Painting the circles
 svg
   .selectAll("circle")
   .data(latLongCommunities)
@@ -238,215 +480,70 @@ svg
 ;
 ```
 
-- Nice ! we got an spot on top of each community, now is time to
-  make this spot size relative to the number of affected cases per community.
-
-- We will add the stats that we need to display (affected persons per community):
-
-_./stats.ts_
+- As we know the main functionality shall let us change from covid data of April 2021 and covid data April 2022, let's add how to define de constant to update the chart.
 
 ```typescript
-export const stats = [
-  {
-    name: "Madrid",
-    value: 174,
-  },
-  {
-    name: "La Rioja",
-    value: 39,
-  },
-  {
-    name: "Andalucía",
-    value: 34,
-  },
-  {
-    name: "Cataluña",
-    value: 24,
-  },
-  {
-    name: "Valencia",
-    value: 30,
-  },
-  {
-    name: "Murcia",
-    value: 0,
-  },
-  {
-    name: "Extremadura",
-    value: 6,
-  },
-  {
-    name: "Castilla La Mancha",
-    value: 16,
-  },
-  {
-    name: "País Vasco",
-    value: 45,
-  },
-  {
-    name: "Cantabria",
-    value: 10,
-  },
-  {
-    name: "Asturias",
-    value: 5,
-  },
-  {
-    name: "Galicia",
-    value: 3,
-  },
-  {
-    name: "Aragón",
-    value: 11,
-  },
-  {
-    name: "Castilla y León",
-    value: 19,
-  },
-  {
-    name: "Islas Canarias",
-    value: 18,
-  },
-  {
-    name: "Islas Baleares",
-    value: 6,
-  },
-];
-```
-
-- Let's import it into our index.ts
-
-_./src/index.ts_
-
-```diff
-import * as d3 from "d3";
-import * as topojson from "topojson-client";
-const spainjson = require("./spain.json");
-const d3Composite = require("d3-composite-projections");
-import { latLongCommunities } from "./communities";
-+ // Covid data per community, cases accumulated until 19-04-2022
-+ import { covid_04_2022 } from "./data/covid_stats";
-+ // Covid data per community, cases accumulated until 19-04-2021
-+ import { covid_04_2021 } from "./data/covid_stats";
-+ // Import resultentry, type of data
-+ import { ResultEntry } from "./data/covid_stats";
-```
-
-- Let's calculate the maximum number of affected of all communities:
-
-_./src/index.ts_
-
-```typescript
-const maxAffected = stats.reduce(
-  (max, item) => (item.value > max ? item.value : max),
-  0
-);
-```
-
-- Let's create an scale to map affected to radius size.
-
-_./src/index.ts_
-
-```typescript
-const affectedRadiusScale = d3
-  .scaleLinear()
-  .domain([0, maxAffected])
-  .range([0, 50]); // 50 pixel max radius, we could calculate it relative to width and height
-```
-
-- Let's create a helper function to glue the community name with the affected cases.
-
-_./src/index.ts_
-
-```typescript
-const calculateRadiusBasedOnAffectedCases = (comunidad: string) => {
-  const entry = stats.find((item) => item.name === comunidad);
-
-  return entry ? affectedRadiusScale(entry.value) : 0;
+// Defining the chart that is going to change the covid cases
+const updateChart = (data: ResultEntry[]) => {
+  currentCovidStat = data;
+  // Selecciono el path y actualizo los datos
+  svg  
+    .selectAll("circle")
+    .data(latLongCommunities)
+    // as we have paint the circles before we don't need to append them
+    .attr("class", "affected-marker")
+    .attr("r", (d) => calculateRadiusBasedOnAffectedCases(d.name))
+    .attr("cx", (d) => aProjection([d.long, d.lat])[0])
+    .attr("cy", (d) => aProjection([d.long, d.lat])[1])
+    .transition()
+    .duration(500);
 };
 ```
 
-- Let's tie it up with the circle rendering code that we created above:
+- Now, let's add the button ids to know which data show in the map:
 
-_./src/index.ts_
+```typescript
+// Adding the data when click the button of april 2021
+document
+  .getElementById('april_2021')
+  .addEventListener('click', () => {
+    updateChart(covid_04_2021);
+  });
 
-```diff
-svg
-  .selectAll("circle")
-  .data(latLongCommunities)
-  .enter()
-  .append("circle")
--  .attr("r", 15)
-+  .attr("r", d => calculateRadiusBasedOnAffectedCases(d.name))
-  .attr("cx", d => aProjection([d.long, d.lat])[0])
-  .attr("cy", d => aProjection([d.long, d.lat])[1]);
+// Adding the data when click the button of april 2022
+document
+  .getElementById('april_2022')
+  .addEventListener('click', () => {
+    updateChart(covid_04_2022);
+  });
+  
 ```
 
-- If we run the example we can check that know circles are shonw in the right size.
+- Nice ! we got an spot on top of each community, now is time to
+  make this spot size relative to the number of affected cases per community.
+
+In the file _index.html_ I've added the two buttons to select if we want to see the covid cases in april 2021 or april 2022.
+
+```typescript
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="./map.css" />
+    <link rel="stylesheet" type="text/css" href="./base.css" />
+  </head>
+  <body>
+    <div>
+      <button id="april_2021">Covid April 2021</button>
+      <button id="april_2022">Covid April 2022</button>
+    </div>
+    <script type="module" src="./index.ts"></script>
+  </body>
+</html>
+```
+
+./src/base.css let us defined the style for the layout.
 
 - Black circles are ugly let's add some styles, we will just use a red background and
   add some transparency to let the user see the spot and the map under that spot.
-
-_./src/map.css_
-
-```diff
-.country {
-  stroke-width: 1;
-  stroke: #2f4858;
-  fill: #008c86;
-}
-
-.selected-country {
-  stroke-width: 1;
-  stroke: #bc5b40;
-  fill: #f88f70;
-}
-
-+ .affected-marker {
-+  stroke-width: 1;
-+  stroke: #bc5b40;
-+  fill: #f88f70;
-+  fill-opacity: 0.7;
-+ }
-```
-
-- Let's apply this style to the black circles that we are rendering:
-
-_./src/index.ts_
-
-```diff
-svg
-  .selectAll("circle")
-  .data(latLongCommunities)
-  .enter()
-  .append("circle")
-+  .attr("class", "affected-marker")
-  .attr("r", d => calculateRadiusBasedOnAffectedCases(d.name))
-  .attr("cx", d => aProjection([d.long, d.lat])[0])
-  .attr("cy", d => aProjection([d.long, d.lat])[1]);
-```
-
-- Just to wrap up let's remove features that we are not using for this chart
-  (highlight a given community on mouse hover).
-
-_./src/index.ts_
-
-```diff
-svg
-  .selectAll("path")
-  .data(geojson["features"])
-  .enter()
-  .append("path")
-  .attr("class", "country")
-  // data loaded from json file
-  .attr("d", geoPath as any)
--  .on("mouseover", function(d, i) {
--    d3.select(this).attr("class", "selected-country");
--  })
--  .on("mouseout", function(d, i) {
--    d3.select(this).attr("class", "country");
--  });
-```
 
 ./src/map.css
 
@@ -457,12 +554,6 @@ svg
   fill: #008c86;
 }
 
-- .selected-country {
--  stroke-width: 1;
--  stroke: #bc5b40;
--  fill: #f88f70;
-- }
-
 .affected-marker {
   stroke-width: 1;
   stroke: #bc5b40;
@@ -471,12 +562,3 @@ svg
 }
 ```
 
-# About Basefactor + Lemoncode
-
-We are an innovating team of Javascript experts, passionate about turning your ideas into robust products.
-
-[Basefactor, consultancy by Lemoncode](http://www.basefactor.com) provides consultancy and coaching services.
-
-[Lemoncode](http://lemoncode.net/services/en/#en-home) provides training services.
-
-For the LATAM/Spanish audience we are running an Online Front End Master degree, more info: http://lemoncode.net/master-frontend

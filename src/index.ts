@@ -7,9 +7,10 @@ import { covid_04_2022 } from "./data/covid_stats";
 import { covid_04_2021 } from "./data/covid_stats";
 // Import resultentry, type of data
 import { ResultEntry } from "./data/covid_stats";
+// Spain json
 const spainjson = require("./spain.json");
+// Projections for canary island
 const d3Composite = require("d3-composite-projections");
-
 
 
 // Calculating the maximum value
@@ -56,7 +57,7 @@ const svg = d3
   .attr("height", 800)
   .attr("style", "background-color: #FBFAF0");
 
-// Defining the geojson with the communities
+// Defining the geojson 
 svg
   .selectAll("path")
   .data(geojson["features"])

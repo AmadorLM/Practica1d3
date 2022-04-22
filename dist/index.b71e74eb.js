@@ -524,7 +524,9 @@ var _topojsonClient = require("topojson-client");
 var _communities = require("./communities");
 // Covid data per community, cases accumulated until 19-04-2022
 var _covidStats = require("./data/covid_stats");
+// Spain json
 const spainjson = require("./spain.json");
+// Projections for canary island
 const d3Composite = require("d3-composite-projections");
 // Calculating the maximum value
 // I take the maximum value of covid in april 2022 to see the transition
@@ -560,7 +562,7 @@ aProjection.fitSize([
 ], geojson);
 // Defining the layout, body, svg, width, height and the background color
 const svg = _d3.select("body").append("svg").attr("width", 1024).attr("height", 800).attr("style", "background-color: #FBFAF0");
-// Defining the geojson with the communities
+// Defining the geojson 
 svg.selectAll("path").data(geojson["features"]).enter().append("path").attr("class", "country")// use geoPath to convert the data into the current projection
 // https://stackoverflow.com/questions/35892627/d3-map-d-attribute
 .attr("d", geoPath);
